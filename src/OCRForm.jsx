@@ -7,26 +7,9 @@ const OCRForm = () => {
     apellidoPaterno: "",
     apellidoMaterno: "",
     nombre: "",
-    fechaNacimiento: "",
+    curp: "",
   });
   const [ocrResult, setOcrResult] = useState(null);
-
-  const isDateLike = (text) => {
-    // Expresión regular para detectar fechas posibles
-    const dateRegex = /(\\d{1,2})[\\/\\.\\-]?(\\d{1,2})[\\/\\.\\-]?(\\d{4})/;
-    const match = text.match(dateRegex);
-
-    if (match) {
-      const day = match[1].padStart(2, "0");
-      const month = match[2].padStart(2, "0");
-      const year = match[3];
-      // Verifica si es una fecha válida
-      if (parseInt(day) <= 31 && parseInt(month) <= 12 && year.length === 4) {
-        return `${day}/${month}/${year}`; // Devuelve la fecha formateada
-      }
-    }
-    return null; // No es una fecha válida
-  };
 
   const palabrasIgnoradas = [
     "INSTITUTO",
@@ -39,7 +22,6 @@ const OCRForm = () => {
     "VOTAR",
     "SEXO",
     "ANO DE REGISTRO",
-    "CURP",
     "SECCION",
     "VIGENCIA",
     "MUNICIPIO",
@@ -51,7 +33,23 @@ const OCRForm = () => {
     "FEDERAL",
     "ELECTORES",
     "REGISTRO FEDERALDE ELECTORES",
+    "MÉXICO",
+    "FECHA",
+    "FECHA DE",
+    "NACIMIENTO",
+    "28/11/2000",
+    "26/1212000",
   ];
+
+  const isCURP = (text) => {
+    // Si comienza con "CURP", recorta esa parte
+    if (text.startsWith("CURP")) {
+      text = text.slice(4).trim(); // Quita "CURP" y elimina espacios adicionales
+    }
+    // Validar el formato de CURP
+    const curpRegex = /^[A-Z]{4}\d{6}[A-Z]{6}[A-Z]\d$/;
+    return curpRegex.test(text);
+  };
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -75,27 +73,39 @@ const OCRForm = () => {
       setOcrResult(ocrResult); // Mostrar el resultado en JSON
 
       const newFormValues = { ...formValues };
-      let detectados = 0; // Para controlar el orden de asignación
+      let apellidoCount = 0;
 
       ocrResult.forEach((item) => {
-        const text = item.text.trim();
-        const upperText = text.toUpperCase();
+        let text = item.text.toUpperCase();
 
-        // Ignorar palabras específicas
-        if (!palabrasIgnoradas.includes(upperText) && item.confidence > 0.9) {
-          const formattedDate = isDateLike(text); // Intenta formatear como fecha
+        // Mostrar en consola para depuración
+        console.log("Procesando:", text);
 
-          if (formattedDate) {
-            // Asigna al campo de fecha de nacimiento si es una fecha válida
-            newFormValues.fechaNacimiento = formattedDate;
-          } else if (detectados === 0) {
-            newFormValues.apellidoPaterno = text;
-          } else if (detectados === 1) {
-            newFormValues.apellidoMaterno = text;
-          } else if (detectados === 2) {
-            newFormValues.nombre = text;
-          }
-          detectados++;
+        // Ignorar palabras no deseadas
+        if (palabrasIgnoradas.some((palabra) => text.includes(palabra))) {
+          console.log("Ignorado:", text);
+          return;
+        }
+
+        // Detectar CURP
+        if (isCURP(text) && !newFormValues.curp) {
+          console.log("CURP detectada:", text);
+          newFormValues.curp = text.startsWith("CURP")
+            ? text.slice(4).trim()
+            : text; // Corta "CURP" si está al inicio
+        }
+        // Detectar Apellidos y Nombres
+        else if (apellidoCount === 0) {
+          console.log("Apellido Paterno detectado:", text);
+          newFormValues.apellidoPaterno = text;
+          apellidoCount++;
+        } else if (apellidoCount === 1) {
+          console.log("Apellido Materno detectado:", text);
+          newFormValues.apellidoMaterno = text;
+          apellidoCount++;
+        } else if (!newFormValues.nombre) {
+          console.log("Nombre detectado:", text);
+          newFormValues.nombre = text;
         }
       });
 
@@ -116,12 +126,14 @@ const OCRForm = () => {
         <input type="file" accept="image/*" onChange={handleFileChange} />
         <button type="submit">Upload and Process</button>
       </form>
+
       {ocrResult && (
         <div>
           <h3>OCR Result (JSON):</h3>
           <pre>{JSON.stringify(ocrResult, null, 2)}</pre>
         </div>
       )}
+
       <form>
         <label>
           Apellido Paterno:
@@ -132,6 +144,7 @@ const OCRForm = () => {
             onChange={handleInputChange}
           />
         </label>
+        <br />
         <label>
           Apellido Materno:
           <input
@@ -141,8 +154,9 @@ const OCRForm = () => {
             onChange={handleInputChange}
           />
         </label>
+        <br />
         <label>
-          Nombre/s:
+          Nombre:
           <input
             type="text"
             name="nombre"
@@ -150,12 +164,13 @@ const OCRForm = () => {
             onChange={handleInputChange}
           />
         </label>
+        <br />
         <label>
-          Fecha de Nacimiento:
+          CURP:
           <input
             type="text"
-            name="fechaNacimiento"
-            value={formValues.fechaNacimiento}
+            name="curp"
+            value={formValues.curp}
             onChange={handleInputChange}
           />
         </label>
