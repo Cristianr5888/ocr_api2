@@ -37,8 +37,6 @@ const OCRForm = () => {
     "FECHA",
     "FECHA DE",
     "NACIMIENTO",
-    "28/11/2000",
-    "26/1212000",
   ];
 
   const isCURP = (text) => {
@@ -77,16 +75,22 @@ const OCRForm = () => {
 
       ocrResult.forEach((item) => {
         let text = item.text.toUpperCase();
-
+      
         // Mostrar en consola para depuración
         console.log("Procesando:", text);
-
+      
         // Ignorar palabras no deseadas
         if (palabrasIgnoradas.some((palabra) => text.includes(palabra))) {
-          console.log("Ignorado:", text);
+          console.log("Ignorado por palabras no deseadas:", text);
           return;
         }
-
+      
+        // Verificar que el texto comience con letras
+        if (!/^[A-Z]/.test(text)) {
+          console.log("Ignorado por comenzar con número:", text);
+          return;
+        }
+      
         // Detectar CURP
         if (isCURP(text) && !newFormValues.curp) {
           console.log("CURP detectada:", text);
@@ -108,6 +112,7 @@ const OCRForm = () => {
           newFormValues.nombre = text;
         }
       });
+      
 
       setFormValues(newFormValues);
     } catch (error) {
