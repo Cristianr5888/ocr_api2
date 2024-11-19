@@ -113,6 +113,59 @@ const OCRForm = () => {
         }
       });
       
+      // Validar y corregir valores basados en la CURP
+      function validarYCorregirCampos(formValues) {
+        const curp = formValues.curp || "";
+        const primerCaracter = curp.slice(0, 1); // Primer letra para Apellido Paterno
+        const segundoCaracter = curp.slice(1, 2); // Segundo carácter para Apellido Paterno
+        const tercerCaracter = curp.slice(2, 3); // Tercer carácter para Apellido Materno
+        const cuartoCaracter = curp.slice(3, 4); // Cuarto carácter para el Nombre
+      
+        // Validar Apellido Paterno
+        if (!formValues.apellidoPaterno.startsWith(primerCaracter + segundoCaracter)) {
+          console.log("Corrigiendo Apellido Paterno...");
+          if (formValues.nombre.startsWith(primerCaracter + segundoCaracter)) {
+            [formValues.apellidoPaterno, formValues.nombre] = [
+              formValues.nombre,
+              formValues.apellidoPaterno,
+            ];
+          } else if (formValues.apellidoMaterno.startsWith(primerCaracter + segundoCaracter)) {
+            [formValues.apellidoPaterno, formValues.apellidoMaterno] = [
+              formValues.apellidoMaterno,
+              formValues.apellidoPaterno,
+            ];
+          }
+        }
+      
+        // Validar Apellido Materno
+        if (!formValues.apellidoMaterno.startsWith(tercerCaracter)) {
+          console.log("Corrigiendo Apellido Materno...");
+          if (formValues.nombre.startsWith(tercerCaracter)) {
+            [formValues.apellidoMaterno, formValues.nombre] = [
+              formValues.nombre,
+              formValues.apellidoMaterno,
+            ];
+          }
+        }
+      
+        // Validar Nombre
+        if (!formValues.nombre.startsWith(cuartoCaracter)) {
+          console.log("Corrigiendo Nombre...");
+          if (formValues.apellidoMaterno.startsWith(cuartoCaracter)) {
+            [formValues.nombre, formValues.apellidoMaterno] = [
+              formValues.apellidoMaterno,
+              formValues.nombre,
+            ];
+          }
+        }
+      }
+      
+      // Llamar a la validación después de procesar los valores
+      validarYCorregirCampos(newFormValues);
+      
+      console.log("Valores finales:", newFormValues);
+      
+      
 
       setFormValues(newFormValues);
     } catch (error) {
