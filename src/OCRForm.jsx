@@ -8,6 +8,8 @@ const OCRForm = () => {
     apellidoMaterno: "",
     nombre: "",
     curp: "",
+    edad: "",
+    fechaNac: "",
   });
   const [ocrResult, setOcrResult] = useState(null);
 
@@ -47,6 +49,34 @@ const OCRForm = () => {
     // Validar el formato de CURP
     const curpRegex = /^[A-Z]{4}\d{6}[A-Z]{6}[A-Z]\d$/;
     return curpRegex.test(text);
+  };
+
+  const calcularEdadYFechaNacimiento = (curp) => {
+    if (!curp || curp.length < 10) return { fechaNacimiento: "", edad: "" };
+
+    const año = parseInt(curp.slice(4, 6), 10);
+    const mes = parseInt(curp.slice(6, 8), 10) - 1; // Mes es 0-indexado
+    const día = parseInt(curp.slice(8, 10), 10);
+
+    // Determinar siglo
+    const siglo = año < 50 ? 2000 : 1900;
+    const fechaNacimiento = new Date(siglo + año, mes, día);
+
+    // Calcular edad
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+    if (
+      hoy.getMonth() < fechaNacimiento.getMonth() ||
+      (hoy.getMonth() === fechaNacimiento.getMonth() &&
+        hoy.getDate() < fechaNacimiento.getDate())
+    ) {
+      edad--;
+    }
+
+    return {
+      fechaNacimiento: fechaNacimiento.toISOString().split("T")[0], // Formato YYYY-MM-DD
+      edad: edad.toString(),
+    };
   };
 
   const handleFileChange = (event) => {
@@ -112,6 +142,8 @@ const OCRForm = () => {
           newFormValues.nombre = text;
         }
       });
+
+      formValues.fechaNac = calcularEdadYFechaNacimiento(formValues.fechaNacimiento);
       
       // Validar y corregir valores basados en la CURP
       function obtenerPrimeraVocal(texto) {
@@ -245,6 +277,26 @@ const OCRForm = () => {
             type="text"
             name="curp"
             value={formValues.curp}
+            onChange={handleInputChange}
+          />
+        </label>
+        <br />
+        <label>
+          Fecha de Nacimiento:
+          <input
+            type="text"
+            name="fechaNac"
+            value={formValues.fechaNac}
+            onChange={handleInputChange}
+          />
+        </label>
+        <br />
+        <label>
+          Edad: 
+          <input
+            type="text"
+            name="edad"
+            value={formValues.edad}
             onChange={handleInputChange}
           />
         </label>
