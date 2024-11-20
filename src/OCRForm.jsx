@@ -114,22 +114,37 @@ const OCRForm = () => {
       });
       
       // Validar y corregir valores basados en la CURP
+      function obtenerPrimeraVocal(texto) {
+        const vocales = texto.match(/[AEIOU]/);
+        return vocales ? vocales[0] : ""; // Retorna la primera vocal encontrada o una cadena vacía
+      }
+      
       function validarYCorregirCampos(formValues) {
         const curp = formValues.curp || "";
-        const primerCaracter = curp.slice(0, 1); // Primer letra para Apellido Paterno
-        const segundoCaracter = curp.slice(1, 2); // Segundo carácter para Apellido Paterno
-        const tercerCaracter = curp.slice(2, 3); // Tercer carácter para Apellido Materno
-        const cuartoCaracter = curp.slice(3, 4); // Cuarto carácter para el Nombre
+        const primerCaracter = curp.slice(0, 1); // Primera consonante del apellido paterno
+        const segundoCaracter = curp.slice(1, 2); // Primera vocal del apellido paterno
+        const tercerCaracter = curp.slice(2, 3); // Primer carácter del apellido materno
+        const cuartoCaracter = curp.slice(3, 4); // Primer carácter del nombre
       
         // Validar Apellido Paterno
-        if (!formValues.apellidoPaterno.startsWith(primerCaracter + segundoCaracter)) {
+        const primeraVocalApellidoPaterno = obtenerPrimeraVocal(formValues.apellidoPaterno || "");
+        if (
+          !formValues.apellidoPaterno.startsWith(primerCaracter) || 
+          primeraVocalApellidoPaterno !== segundoCaracter
+        ) {
           console.log("Corrigiendo Apellido Paterno...");
-          if (formValues.nombre.startsWith(primerCaracter + segundoCaracter)) {
+          if (
+            formValues.nombre.startsWith(primerCaracter) && 
+            obtenerPrimeraVocal(formValues.nombre) === segundoCaracter
+          ) {
             [formValues.apellidoPaterno, formValues.nombre] = [
               formValues.nombre,
               formValues.apellidoPaterno,
             ];
-          } else if (formValues.apellidoMaterno.startsWith(primerCaracter + segundoCaracter)) {
+          } else if (
+            formValues.apellidoMaterno.startsWith(primerCaracter) && 
+            obtenerPrimeraVocal(formValues.apellidoMaterno) === segundoCaracter
+          ) {
             [formValues.apellidoPaterno, formValues.apellidoMaterno] = [
               formValues.apellidoMaterno,
               formValues.apellidoPaterno,
@@ -159,6 +174,7 @@ const OCRForm = () => {
           }
         }
       }
+      
       
       // Llamar a la validación después de procesar los valores
       validarYCorregirCampos(newFormValues);
