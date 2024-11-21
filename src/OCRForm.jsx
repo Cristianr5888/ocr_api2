@@ -8,6 +8,8 @@ const OCRForm = () => {
     apellidoMaterno: "",
     nombre: "",
     curp: "",
+    edad: "",
+    fechaNac: "",
   });
   const [ocrResult, setOcrResult] = useState(null);
 
@@ -37,8 +39,6 @@ const OCRForm = () => {
     "FECHA",
     "FECHA DE",
     "NACIMIENTO",
-    "28/11/2000",
-    "26/1212000",
   ];
 
   const isCURP = (text) => {
@@ -49,6 +49,34 @@ const OCRForm = () => {
     // Validar el formato de CURP
     const curpRegex = /^[A-Z]{4}\d{6}[A-Z]{6}[A-Z]\d$/;
     return curpRegex.test(text);
+  };
+
+  const calcularEdadYFechaNacimiento = (curp) => {
+    if (!curp || curp.length < 10) return { fechaNacimiento: "", edad: "" };
+
+    const año = parseInt(curp.slice(4, 6), 10);
+    const mes = parseInt(curp.slice(6, 8), 10) - 1; // Mes es 0-indexado
+    const día = parseInt(curp.slice(8, 10), 10);
+
+    // Determinar siglo
+    const siglo = año < 50 ? 2000 : 1900;
+    const fechaNacimiento = new Date(siglo + año, mes, día);
+
+    // Calcular edad
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+    if (
+      hoy.getMonth() < fechaNacimiento.getMonth() ||
+      (hoy.getMonth() === fechaNacimiento.getMonth() &&
+        hoy.getDate() < fechaNacimiento.getDate())
+    ) {
+      edad--;
+    }
+
+    return {
+      fechaNacimiento: fechaNacimiento.toISOString().split("T")[0], // Formato YYYY-MM-DD
+      edad: edad.toString(),
+    };
   };
 
   const handleFileChange = (event) => {
@@ -77,16 +105,22 @@ const OCRForm = () => {
 
       ocrResult.forEach((item) => {
         let text = item.text.toUpperCase();
-
+      
         // Mostrar en consola para depuración
         console.log("Procesando:", text);
-
+      
         // Ignorar palabras no deseadas
         if (palabrasIgnoradas.some((palabra) => text.includes(palabra))) {
-          console.log("Ignorado:", text);
+          console.log("Ignorado por palabras no deseadas:", text);
           return;
         }
-
+      
+        // Verificar que el texto comience con letras
+        if (!/^[A-Z]/.test(text)) {
+          console.log("Ignorado por comenzar con número:", text);
+          return;
+        }
+      
         // Detectar CURP
         if (isCURP(text) && !newFormValues.curp) {
           console.log("CURP detectada:", text);
@@ -108,6 +142,78 @@ const OCRForm = () => {
           newFormValues.nombre = text;
         }
       });
+
+      formValues.fechaNac = calcularEdadYFechaNacimiento(formValues.fechaNacimiento);
+      
+      // Validar y corregir valores basados en la CURP
+      function obtenerPrimeraVocal(texto) {
+        const vocales = texto.match(/[AEIOU]/);
+        return vocales ? vocales[0] : ""; // Retorna la primera vocal encontrada o una cadena vacía
+      }
+      
+      function validarYCorregirCampos(formValues) {
+        const curp = formValues.curp || "";
+        const primerCaracter = curp.slice(0, 1); // Primera consonante del apellido paterno
+        const segundoCaracter = curp.slice(1, 2); // Primera vocal del apellido paterno
+        const tercerCaracter = curp.slice(2, 3); // Primer carácter del apellido materno
+        const cuartoCaracter = curp.slice(3, 4); // Primer carácter del nombre
+      
+        // Validar Apellido Paterno
+        const primeraVocalApellidoPaterno = obtenerPrimeraVocal(formValues.apellidoPaterno || "");
+        if (
+          !formValues.apellidoPaterno.startsWith(primerCaracter) || 
+          primeraVocalApellidoPaterno !== segundoCaracter
+        ) {
+          console.log("Corrigiendo Apellido Paterno...");
+          if (
+            formValues.nombre.startsWith(primerCaracter) && 
+            obtenerPrimeraVocal(formValues.nombre) === segundoCaracter
+          ) {
+            [formValues.apellidoPaterno, formValues.nombre] = [
+              formValues.nombre,
+              formValues.apellidoPaterno,
+            ];
+          } else if (
+            formValues.apellidoMaterno.startsWith(primerCaracter) && 
+            obtenerPrimeraVocal(formValues.apellidoMaterno) === segundoCaracter
+          ) {
+            [formValues.apellidoPaterno, formValues.apellidoMaterno] = [
+              formValues.apellidoMaterno,
+              formValues.apellidoPaterno,
+            ];
+          }
+        }
+      
+        // Validar Apellido Materno
+        if (!formValues.apellidoMaterno.startsWith(tercerCaracter)) {
+          console.log("Corrigiendo Apellido Materno...");
+          if (formValues.nombre.startsWith(tercerCaracter)) {
+            [formValues.apellidoMaterno, formValues.nombre] = [
+              formValues.nombre,
+              formValues.apellidoMaterno,
+            ];
+          }
+        }
+      
+        // Validar Nombre
+        if (!formValues.nombre.startsWith(cuartoCaracter)) {
+          console.log("Corrigiendo Nombre...");
+          if (formValues.apellidoMaterno.startsWith(cuartoCaracter)) {
+            [formValues.nombre, formValues.apellidoMaterno] = [
+              formValues.apellidoMaterno,
+              formValues.nombre,
+            ];
+          }
+        }
+      }
+      
+      
+      // Llamar a la validación después de procesar los valores
+      validarYCorregirCampos(newFormValues);
+      
+      console.log("Valores finales:", newFormValues);
+      
+      
 
       setFormValues(newFormValues);
     } catch (error) {
@@ -173,6 +279,26 @@ const OCRForm = () => {
             type="text"
             name="curp"
             value={formValues.curp}
+            onChange={handleInputChange}
+          />
+        </label>
+        <br />
+        <label>
+          Fecha de Nacimiento:
+          <input
+            type="text"
+            name="fechaNac"
+            value={formValues.fechaNac}
+            onChange={handleInputChange}
+          />
+        </label>
+        <br />
+        <label>
+          Edad: 
+          <input
+            type="text"
+            name="edad"
+            value={formValues.edad}
             onChange={handleInputChange}
           />
         </label>
