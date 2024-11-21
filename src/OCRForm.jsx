@@ -11,7 +11,7 @@ const OCRForm = () => {
     edad: "",
     fechaNac: "",
   });
-  const [ocrResult, setOcrResult] = useState(null);
+  const [, setOcrResult] = useState(null);
 
   const palabrasIgnoradas = [
     "INSTITUTO",
@@ -241,20 +241,21 @@ const OCRForm = () => {
 
         {/* Label personalizado */}
         <label htmlFor="file-upload" className="custom-file-label">
-          Seleccionar archivo
+          Select file
         </label>
 
+        <br />
         <button type="submit" className="submit-button">
-          Upload and Process
+          Upload
         </button>
       </form>
 
-      {ocrResult && (
+      {/* {ocrResult && (
         <div>
           <h3>OCR Result (JSON):</h3>
           <pre>{JSON.stringify(ocrResult, null, 2)}</pre>
         </div>
-      )}
+      )} */}
 
       <form>
         <label>
