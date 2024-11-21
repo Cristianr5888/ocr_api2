@@ -11,6 +11,7 @@ CORS(app)
 ocr = PaddleOCR(use_angle_cls=True, lang='es')
 
 # Lista de palabras ignoradas
+
 palabras_ignoradas = [
      "INSTITUTO",
     "NACIONAL",
