@@ -5,7 +5,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>OCR Form</h1>
+        <h1>OCR Autofill Form</h1>
         <OCRForm />
       </header>
     </div>

@@ -105,22 +105,22 @@ const OCRForm = () => {
 
       ocrResult.forEach((item) => {
         let text = item.text.toUpperCase();
-      
+
         // Mostrar en consola para depuración
         console.log("Procesando:", text);
-      
+
         // Ignorar palabras no deseadas
         if (palabrasIgnoradas.some((palabra) => text.includes(palabra))) {
           console.log("Ignorado por palabras no deseadas:", text);
           return;
         }
-      
+
         // Verificar que el texto comience con letras
         if (!/^[A-Z]/.test(text)) {
           console.log("Ignorado por comenzar con número:", text);
           return;
         }
-      
+
         // Detectar CURP
         if (isCURP(text) && !newFormValues.curp) {
           console.log("CURP detectada:", text);
@@ -143,30 +143,34 @@ const OCRForm = () => {
         }
       });
 
-      formValues.fechaNac = calcularEdadYFechaNacimiento(formValues.fechaNacimiento);
-      
+      formValues.fechaNac = calcularEdadYFechaNacimiento(
+        formValues.fechaNacimiento
+      );
+
       // Validar y corregir valores basados en la CURP
       function obtenerPrimeraVocal(texto) {
         const vocales = texto.match(/[AEIOU]/);
         return vocales ? vocales[0] : ""; // Retorna la primera vocal encontrada o una cadena vacía
       }
-      
+
       function validarYCorregirCampos(formValues) {
         const curp = formValues.curp || "";
         const primerCaracter = curp.slice(0, 1); // Primera consonante del apellido paterno
         const segundoCaracter = curp.slice(1, 2); // Primera vocal del apellido paterno
         const tercerCaracter = curp.slice(2, 3); // Primer carácter del apellido materno
         const cuartoCaracter = curp.slice(3, 4); // Primer carácter del nombre
-      
+
         // Validar Apellido Paterno
-        const primeraVocalApellidoPaterno = obtenerPrimeraVocal(formValues.apellidoPaterno || "");
+        const primeraVocalApellidoPaterno = obtenerPrimeraVocal(
+          formValues.apellidoPaterno || ""
+        );
         if (
-          !formValues.apellidoPaterno.startsWith(primerCaracter) || 
+          !formValues.apellidoPaterno.startsWith(primerCaracter) ||
           primeraVocalApellidoPaterno !== segundoCaracter
         ) {
           console.log("Corrigiendo Apellido Paterno...");
           if (
-            formValues.nombre.startsWith(primerCaracter) && 
+            formValues.nombre.startsWith(primerCaracter) &&
             obtenerPrimeraVocal(formValues.nombre) === segundoCaracter
           ) {
             [formValues.apellidoPaterno, formValues.nombre] = [
@@ -174,7 +178,7 @@ const OCRForm = () => {
               formValues.apellidoPaterno,
             ];
           } else if (
-            formValues.apellidoMaterno.startsWith(primerCaracter) && 
+            formValues.apellidoMaterno.startsWith(primerCaracter) &&
             obtenerPrimeraVocal(formValues.apellidoMaterno) === segundoCaracter
           ) {
             [formValues.apellidoPaterno, formValues.apellidoMaterno] = [
@@ -183,7 +187,7 @@ const OCRForm = () => {
             ];
           }
         }
-      
+
         // Validar Apellido Materno
         if (!formValues.apellidoMaterno.startsWith(tercerCaracter)) {
           console.log("Corrigiendo Apellido Materno...");
@@ -194,7 +198,7 @@ const OCRForm = () => {
             ];
           }
         }
-      
+
         // Validar Nombre
         if (!formValues.nombre.startsWith(cuartoCaracter)) {
           console.log("Corrigiendo Nombre...");
@@ -206,14 +210,11 @@ const OCRForm = () => {
           }
         }
       }
-      
-      
+
       // Llamar a la validación después de procesar los valores
       validarYCorregirCampos(newFormValues);
-      
+
       console.log("Valores finales:", newFormValues);
-      
-      
 
       setFormValues(newFormValues);
     } catch (error) {
@@ -229,7 +230,20 @@ const OCRForm = () => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <input type="file" accept="image/*" onChange={handleFileChange} />
+        {/* Input oculto */}
+        <input
+          type="file"
+          id="file-upload"
+          accept="image/*"
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+
+        {/* Label personalizado */}
+        <label htmlFor="file-upload" className="custom-file-label">
+          Seleccionar archivo
+        </label>
+
         <button type="submit" className="submit-button">
           Upload and Process
         </button>
@@ -283,7 +297,7 @@ const OCRForm = () => {
           />
         </label>
         <br />
-        <label>
+        {/* <label>
           Fecha de Nacimiento:
           <input
             type="text"
@@ -291,9 +305,9 @@ const OCRForm = () => {
             value={formValues.fechaNac}
             onChange={handleInputChange}
           />
-        </label>
+        </label> */}
         <br />
-        <label>
+        {/* <label>
           Edad: 
           <input
             type="text"
@@ -301,7 +315,7 @@ const OCRForm = () => {
             value={formValues.edad}
             onChange={handleInputChange}
           />
-        </label>
+        </label> */}
       </form>
     </div>
   );
