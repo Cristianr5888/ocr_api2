@@ -40,3 +40,16 @@
 .read-the-docs {
   color: #888;
 }
+.submit-button {
+  background-color: aqua;
+}
+label {
+  border-radius: 5px;
+
+  margin-top: 15px;
+  gap: 15px;
+}
+input {
+  background-color: azure;
+  margin: 16px;
+}

@@ -124,7 +124,9 @@ const OCRForm = () => {
     <div>
       <form onSubmit={handleSubmit}>
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        <button type="submit">Upload and Process</button>
+        <button type="submit" className="submit-button">
+          Upload and Process
+        </button>
       </form>
 
       {ocrResult && (
