@@ -1,9 +1,7 @@
-# React + Vite
+# OCR Text detector
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### This project uses Python as backend and React as frontend
 
-Currently, two official plugins are available:
+### Also uses libraries like cv2, numpy, paddleocr and flask to detect text from images and autofill a form with the data detected.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 # ocr_api2
